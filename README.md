@@ -3,9 +3,9 @@
 ## Ping
     ping (-d=DO) (-t=1) (-o=ping.json)
 
-test ping using https://github.com/jakejarvis/datacenter-speed-tests:
+test ping using https://github.com/jakejarvis/provider-speed-tests:
 
-    -d --datacenter = to selected datacenter in list (DO, AWS, ALL)
+    -d --provider = to selected provider in list (DO, AWS, ALL)
     -t --tries = number of ping tests
     -o --output = output filename, default ping.json
 
@@ -16,7 +16,7 @@ example result json:
 ## Bestdc
     bestdc (ping1.json, ...) (-o=bestping.json)
 
-calculate and return best ping datacenter from provided ping json files
+calculate and return best ping provider from provided ping json files
 
     -o --output = output filename, default bestdc.json
 
@@ -35,8 +35,8 @@ Create srt config for sender, receiver and proxy
     --payload = payload, default 1316
     --latency = latency, default 500
 
-    -d --datacenter = proxy server datacenter to get instance, required if proxy_ip not set
-    --proxy_ip = proxy server ip, required if datacenter not set
+    -d --provider = proxy server provider to get instance, required if proxy_ip not set
+    --proxy_ip = proxy server ip, required if provider not set
 
     --proxy_rcv_ip = proxy server receive ip, optional
     --proxy_rcv_port = proxy server receive port, default 1234
