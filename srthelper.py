@@ -22,10 +22,12 @@ def ping(provider, tries, output):
 @cli.command()
 @click.argument('src_ping', nargs=1)
 @click.argument('dst_ping', nargs=1)
+@click.option('--sort_by', help='Output JSON filepath', type=click.Choice(['total_ping', 'ping', 'dst_ping']), default='ping')
 @click.option('-o', '--output', type=str, help='Output JSON filepath', default='bestping.json')
-def bestping(src_ping, dst_ping, output):
-    click.echo(f"bestping {src_ping=}, {dst_ping=}, {output=}")
-    click.echo(ping_module.best_ping_server(src_ping, dst_ping, output))
+@click.option('--export', is_flag=True)
+def bestping(**kwargs):
+    click.echo(f"bestping {kwargs}")
+    click.echo(ping_module.best_ping_server(**kwargs))
 
 
 @cli.command()
@@ -44,6 +46,7 @@ def bestping(src_ping, dst_ping, output):
 @click.option('--dst_ip', type=str, help='dst_ip if proxy is caller')
 @click.option('--dst_port', type=str, help='dst_port', default=1235)
 @click.option('--dst_ping', type=int, help='ping from dst to proxy server')
+@click.option('--provider_file', type=str, help='proxy server provider file')
 @click.option('--provider', type=str, help='proxy server provider')
 @click.option('--region', type=str, help='proxy server provider region')
 @click.option('--access_token', type=str, help='provider token')
@@ -54,5 +57,12 @@ def bestping(src_ping, dst_ping, output):
 @click.option('--user', type=str, help='proxy server user', default='root')
 @click.option('--name', type=str, help='name')
 def config(**kwargs):
+    click.echo(kwargs)
+    config_module.create_config(**kwargs)
+
+
+@click.argument('config_json', nargs=1)
+@click.argument('mode', type=click.Choice(['run', 'stop']), nargs=1)
+def proxy_run(**kwargs):
     click.echo(kwargs)
     config_module.create_config(**kwargs)

@@ -56,6 +56,7 @@ def create_config(
     dst_ip=None,
     dst_port=None,
     dst_ping=None,
+    provider_file=None,
     provider=None,
     region=None,
     access_token=None,
@@ -110,6 +111,12 @@ def create_config(
     if ip:
         instance_data = dict(ip=ip, user=user)
     else:
+        if provider_file:
+            with open(provider_file, 'r') as f:
+                bestping_list = json.load(f)
+                bestping = bestping_list[0][1]
+                print(f'{bestping=}')
+                provider, region, src_ping, dst_ping = bestping['provider'], bestping['region'], bestping['ping'], bestping['dst_ping']
         instance_data = launch_instance(
             name=name,
             provider=provider,
@@ -123,15 +130,25 @@ def create_config(
     srt_for_src = calc_srt(src_ping, src_port, ip, fc, rcvbuf)
     srt_for_dst = calc_srt(dst_ping, dst_port, ip, fc, rcvbuf)
     proxy_config = f'srt-live-transmit srt://:{src_port} srt://:{dst_port}'
-    proxy_config_script = f"docker run -d --name=srtlivetransmit --net=host --restart=unless-stopped fenestron/srt:latest {proxy_config}"
+    proxy_config_run = f"docker run -d --name={name} --net=host --restart=unless-stopped fenestron/srt:latest {proxy_config}"
+    proxy_config_stop = f"docker stop {name} && docker rm {name}"
 
     config = dict(
         srt_for_src=srt_for_src,
         srt_for_dst=srt_for_dst,
         proxy_config=proxy_config,
-        proxy_config_script=proxy_config_script,
+        proxy_config_run=proxy_config_run,
+        proxy_config_stop=proxy_config_stop,
         **instance_data,
     )
     with open(output, 'w') as f:
         json.dump(config, f)
     pprint.pprint(config)
+
+
+def setup(config_json, mode):
+    with open(config_json, 'r') as f:
+        config = json.load(f)
+
+
+

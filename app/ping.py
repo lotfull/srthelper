@@ -1,9 +1,10 @@
 import collections
+import copy
 import json
 import platform
+import pprint
 import subprocess
 from re import compile as re_compile
-import copy
 
 providers = {
     'speedtest-nyc1.digitalocean.com': {'region': 'nyc1', 'provider': 'DO'},
@@ -70,10 +71,13 @@ def ping_servers(provider='DO', tries=1, output='ping.json'):
     return sorted_servers
 
 
-def best_ping_server(src_pings_file, dst_pings_file, output='bestping.json'):
-    with open(src_pings_file, 'r') as f:
+def best_ping_server(src_ping, dst_ping, output=None, sort_by=None, export=None):
+    output = output or 'bestping.json'
+    sort_by = sort_by or 'ping'
+    export = export or False
+    with open(src_ping, 'r') as f:
         src_pings = json.load(f)
-    with open(dst_pings_file, 'r') as f:
+    with open(dst_ping, 'r') as f:
         dst_pings = json.load(f)
 
     host_pings = collections.defaultdict(dict)
@@ -84,10 +88,13 @@ def best_ping_server(src_pings_file, dst_pings_file, output='bestping.json'):
         host_pings[host]['dst_ping'] = dst_pings[host]['ping']
         host_pings[host]['total_ping'] = host_pings[host]['ping'] + host_pings[host]['dst_ping']
 
-    sorted_host_pings = sorted(host_pings.items(), key=lambda host_data: host_data[1]['total_ping'])
+    sorted_host_pings = sorted(host_pings.items(), key=lambda host_data: host_data[1][sort_by])
     best_host = sorted_host_pings[0]
-    print(best_host)
+    pprint.pprint(sorted_host_pings)
     with open(output, 'w') as f:
-        json.dump(best_host, f)
+        json.dump(sorted_host_pings, f)
+
+    if export:
+        print(f'--provider={best_host[1]["provider"]} --region={best_host[1]["region"]} --ping={best_host[1]["ping"]} --dst_ping={best_host[1]["dst_ping"]}')
 
     return best_host

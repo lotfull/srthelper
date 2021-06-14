@@ -1,4 +1,11 @@
-click>=7.1.2
-pint>=0.17
-python-digitalocean
-boto3
+certifi>=2021.5.30
+chardet>=4.0.0
+click>=8.0.1
+idna>=2.10
+jsonpickle>=2.0.0
+packaging>=20.9
+Pint>=0.17
+pyparsing>=2.4.6
+python-digitalocean>=1.16.0
+requests>=2.25.1
+urllib3>=1.26.5
