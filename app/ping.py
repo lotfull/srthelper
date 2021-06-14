@@ -2,7 +2,8 @@ import collections
 import json
 import platform
 import subprocess
-from re import compile                as    re_compile
+from re import compile as re_compile
+import copy
 
 providers = {
     'speedtest-nyc1.digitalocean.com': {'region': 'nyc1', 'provider': 'DO'},
@@ -69,29 +70,24 @@ def ping_servers(provider='DO', tries=1, output='ping.json'):
     return sorted_servers
 
 
-def best_ping_server(files, output='bestping.json'):
-    pings_jsons = []
-    for file in files:
-        with open(file, 'r') as f:
-            pings_jsons.append(json.load(f))
+def best_ping_server(src_pings_file, dst_pings_file, output='bestping.json'):
+    with open(src_pings_file, 'r') as f:
+        src_pings = json.load(f)
+    with open(dst_pings_file, 'r') as f:
+        dst_pings = json.load(f)
 
-    pings_total = collections.defaultdict(int)
-    servers_common = set(pings_jsons[0].keys())
-    for pings_json in pings_jsons:
-        servers_common.intersection(pings_json.keys())
+    host_pings = collections.defaultdict(dict)
+    servers_common = set(src_pings.keys()).intersection(dst_pings.keys())
 
-    for pings_json in pings_jsons:
-        for host, data in pings_json.items():
-            if host in servers_common:
-                pings_total[host] += data['ping']
+    for host in servers_common:
+        host_pings[host] = copy.deepcopy(src_pings[host])
+        host_pings[host]['dst_ping'] = dst_pings[host]['ping']
+        host_pings[host]['total_ping'] = host_pings[host]['ping'] + host_pings[host]['dst_ping']
 
-    sorted_servers = sorted(pings_total.items(), key=lambda host_data: host_data[1])
-    best_server = min(sorted_servers, key=lambda host_data: host_data[1])
-    best_host, best_ping = best_server
-    best_data = providers[best_host]
-    best_data['host'], best_data['ping'] = best_host, best_ping
-    print(best_data)
+    sorted_host_pings = sorted(host_pings.items(), key=lambda host_data: host_data[1]['total_ping'])
+    best_host = sorted_host_pings[0]
+    print(best_host)
     with open(output, 'w') as f:
-        json.dump(best_data, f)
+        json.dump(best_host, f)
 
-    return best_data
+    return best_host
