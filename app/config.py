@@ -5,6 +5,7 @@ import click
 from . import do_utils
 from . import aws_utils
 import json
+import pprint
 
 from pint import UnitRegistry
 
@@ -119,19 +120,18 @@ def create_config(
             cpu_type=cpu_type
         )
 
-    src_srt = calc_srt(src_ping, src_port, src_ip, fc, rcvbuf)
-    dst_srt = calc_srt(dst_ping, dst_port, dst_ip, fc, rcvbuf)
+    srt_for_src = calc_srt(src_ping, src_port, ip, fc, rcvbuf)
+    srt_for_dst = calc_srt(dst_ping, dst_port, ip, fc, rcvbuf)
     proxy_config = f'srt-live-transmit srt://:{src_port} srt://:{dst_port}'
     proxy_config_script = f"docker run -d --name=srtlivetransmit --net=host --restart=unless-stopped fenestron/srt:latest {proxy_config}"
 
     config = dict(
-        src_srt=src_srt,
-        dst_srt=dst_srt,
+        srt_for_src=srt_for_src,
+        srt_for_dst=srt_for_dst,
         proxy_config=proxy_config,
         proxy_config_script=proxy_config_script,
         **instance_data,
     )
     with open(output, 'w') as f:
         json.dump(config, f)
-
-
+    pprint.pprint(config)
