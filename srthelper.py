@@ -61,8 +61,10 @@ def config(**kwargs):
     config_module.create_config(**kwargs)
 
 
+@cli.command()
 @click.argument('config_json', nargs=1)
-@click.argument('mode', type=click.Choice(['run', 'stop']), nargs=1)
-def proxy_run(**kwargs):
+@click.argument('mode', type=click.Choice(config_module.COMMANDS), nargs=1)
+@click.option('--clear', is_flag=True, default=False, help='clear server docker containers before run')
+def proxy(**kwargs):
     click.echo(kwargs)
-    config_module.create_config(**kwargs)
+    config_module.proxy(**kwargs)

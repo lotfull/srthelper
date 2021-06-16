@@ -6,6 +6,7 @@ from . import do_utils
 from . import aws_utils
 import json
 import pprint
+from fabric import Connection
 
 from pint import UnitRegistry
 
@@ -77,7 +78,6 @@ def create_config(
     src_port = src_port or 1234
     dst_port = dst_port or 1235
 
-    name = name or f'{mode}-{region}-{src_port}-{dst_port}'
 
     def calc_srt(srt_rtt, srt_port, srt_ip=None, srt_fc=None, srt_rcvbuf=None):
         if not srt_fc or not srt_rcvbuf:
@@ -108,15 +108,20 @@ def create_config(
         print(srt_config)
         return srt_config
 
+    if provider_file:
+        with open(provider_file, 'r') as f:
+            bestping_list = json.load(f)
+            bestping = bestping_list[0][1]
+            print(f'{bestping=}')
+            provider, region, src_ping, dst_ping = bestping['provider'], bestping['region'], bestping['ping'], bestping['dst_ping']
+
+    if ip is None and provider is None:
+        raise click.exceptions.UsageError(message=f'Either --ip or --provider_file or (--provider --region --access-*) options required')
+    name = name or f'{mode}-{ip or provider}-{region}-{src_port}-{dst_port}'
+
     if ip:
         instance_data = dict(ip=ip, user=user)
     else:
-        if provider_file:
-            with open(provider_file, 'r') as f:
-                bestping_list = json.load(f)
-                bestping = bestping_list[0][1]
-                print(f'{bestping=}')
-                provider, region, src_ping, dst_ping = bestping['provider'], bestping['region'], bestping['ping'], bestping['dst_ping']
         instance_data = launch_instance(
             name=name,
             provider=provider,
@@ -127,13 +132,16 @@ def create_config(
             cpu_type=cpu_type
         )
 
-    srt_for_src = calc_srt(src_ping, src_port, ip, fc, rcvbuf)
-    srt_for_dst = calc_srt(dst_ping, dst_port, ip, fc, rcvbuf)
+    check_required_option(src_ping, 'src_ping')
+    check_required_option(dst_ping, 'dst_ping')
+    srt_for_src = calc_srt(src_ping, src_port, instance_data['ip'], fc, rcvbuf)
+    srt_for_dst = calc_srt(dst_ping, dst_port, instance_data['ip'], fc, rcvbuf)
     proxy_config = f'srt-live-transmit srt://:{src_port} srt://:{dst_port}'
     proxy_config_run = f"docker run -d --name={name} --net=host --restart=unless-stopped fenestron/srt:latest {proxy_config}"
     proxy_config_stop = f"docker stop {name} && docker rm {name}"
 
     config = dict(
+        name=name,
         srt_for_src=srt_for_src,
         srt_for_dst=srt_for_dst,
         proxy_config=proxy_config,
@@ -146,9 +154,26 @@ def create_config(
     pprint.pprint(config)
 
 
-def setup(config_json, mode):
+COMMANDS = ['run', 'stop', 'test', 'install', 'list']
+
+
+def proxy(config_json, mode, clear):
     with open(config_json, 'r') as f:
         config = json.load(f)
 
-
-
+    with Connection(host=config['ip'], user=config['user']) as c:
+        if clear:
+            clear_result = c.run('docker stop $(docker ps -aq) ; docker rm $(docker ps -aq)')
+            print(f'{clear_result = }')
+        if mode == 'run':
+            command = config['proxy_config_run']
+        elif mode == 'stop':
+            command = config['proxy_config_stop']
+        elif mode == 'test':
+            command = 'pwd'
+        elif mode == 'install':
+            command = 'apt install snap -y && snap install docker'
+        elif mode == 'list':
+            command = 'docker ps -a'
+        command_result = c.run(command)
+        print(f'{command = }\n{command_result.stdout = }')

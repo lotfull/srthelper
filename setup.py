@@ -6,7 +6,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
     requirements = fh.read()
 setup(
     name='srthelper',
-    version='0.0.5',
+    version='0.0.6',
     author='Kamil Lotfullin',
     author_email='kamil@lotfullin.com',
     license='MIT License',
