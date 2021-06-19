@@ -119,6 +119,9 @@ def create_config(
         raise click.exceptions.UsageError(message=f'Either --ip or --provider_file or (--provider --region --access-*) options required')
     name = name or f'{mode}-{ip or provider}-{region}-{src_port}-{dst_port}'
 
+    check_required_option(src_ping, 'src_ping')
+    check_required_option(dst_ping, 'dst_ping')
+
     if ip:
         instance_data = dict(ip=ip, user=user)
     else:
@@ -131,9 +134,9 @@ def create_config(
             access_secret=access_secret,
             cpu_type=cpu_type
         )
+        with open('instance_data.json', 'w') as f:
+            json.dump(instance_data, f)
 
-    check_required_option(src_ping, 'src_ping')
-    check_required_option(dst_ping, 'dst_ping')
     srt_for_src = calc_srt(src_ping, src_port, instance_data['ip'], fc, rcvbuf)
     srt_for_dst = calc_srt(dst_ping, dst_port, instance_data['ip'], fc, rcvbuf)
     proxy_config = f'srt-live-transmit srt://:{src_port} srt://:{dst_port}'
