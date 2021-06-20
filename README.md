@@ -26,27 +26,27 @@ example result:
 
 
 ## Config
-    config direct/proxy (-b=1000) (--mss=1360) (--payload=1316) (--latency=500) \
-    (--provider=DO) (--region=fra1) (--proxy_rcv_port=1234) (--proxy_snd_port=1235) (-o=config.json)
+    config direct/forwarder (-b=1000) (--mss=1360) (--payload=1316) (--latency=500) \
+    (--provider=DO) (--region=fra1) (--forwarder_rcv_port=1234) (--forwarder_snd_port=1235) (-o=config.json)
 
-Create direct/proxy srt config for sender, receiver, and optional proxy
+Create direct/forwarder srt config for sender, receiver, and optional forwarder
 
-    mode = direct/proxy
+    mode = direct/forwarder
     -b --bitrate = bitrate of video, default 1000
     --mss = mss, default 1360
     --payload = payload, default 1316
     --latency = latency, default 500
 
-    --provider = proxy server provider to get instance, required if ip not set
-    --region = proxy server provider to get instance, required if ip not set
-    --ip = proxy server ip, required if provider not set
-    --user = proxy server user, default=root
+    --provider = forwarder server provider to get instance, required if ip not set
+    --region = forwarder server provider to get instance, required if ip not set
+    --ip = forwarder server ip, required if provider not set
+    --user = forwarder server user, default=root
 
-    --rcv_ip = proxy server receive ip, optional
-    --rcv_port = proxy server receive port, default 1234
-    --snd_ip = proxy server send ip, optional
-    --snd_port = proxy server send port, default 1235
-    --name = proxy server docker container name, default proxy_{rcv}_{snd}
+    --rcv_ip = forwarder server receive ip, optional
+    --rcv_port = forwarder server receive port, default 1234
+    --snd_ip = forwarder server send ip, optional
+    --snd_port = forwarder server send port, default 1235
+    --name = forwarder server docker container name, default forwarder_{rcv}_{snd}
 
     -o --output = output filename, default config.json
 
@@ -55,11 +55,11 @@ example result json:
     {
         "sender": "srt://X.X.X.X:1234?transtype=live&rcvlatency=50&peerlatency=50&fc=104&rcvbuf=1006600&sndbuf=1006600&payloadsize=1316&mss=1360",
         "receiver": "srt://X.X.X.X:1235&transtype=live&rcvlatency=50&peerlatency=50&fc=104&rcvbuf=1006600&sndbuf=1006600&payloadsize=1316&mss=1360",
-        "proxy_ip": "X.X.X.X",
-        "proxy_rcv": "X.X.X.X:1234",
-        "proxy_snd": "X.X.X.X:1235",
-        "proxy_config": "srt-live-transmit srt://:1234 srt://:1235"
-        "proxy_config_script": "docker run -d --name=srtlivetransmit --net=host --restart=unless-stopped fenestron/srt:latest srt-live-transmit srt://:1234 srt://:1235"
+        "forwarder_ip": "X.X.X.X",
+        "forwarder_rcv": "X.X.X.X:1234",
+        "forwarder_snd": "X.X.X.X:1235",
+        "forwarder_config": "srt-live-transmit srt://:1234 srt://:1235"
+        "forwarder_config_script": "docker run -d --name=srtlivetransmit --net=host --restart=unless-stopped fenestron/srt:latest srt-live-transmit srt://:1234 srt://:1235"
     }
 
 example direct request
